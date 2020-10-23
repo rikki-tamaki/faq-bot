@@ -3,16 +3,18 @@
 Promise = require("bluebird");
 const debug = require("debug")("bot-express:skill");
 const dialogflow = require("../service/dialogflow.js");
+const parse = require("../service/parser");
 const SKIP_INTENT_LIST = ["Default Fallback Intent", "Default Welcome Intent", "escalation", "human-response", "robot-response"];
 
-module.exports = class SkillHumanReply {
+module.exports = class SkillHumanResponse {
 
     constructor(){
         this.required_parameter = {
-            user_id: {},
+            user: {},
             question: {},
             answer: {
                 message_to_confirm: {
+                    type: "text",
                     text: "では回答をお願いします。"
                 }
             },
@@ -30,16 +32,11 @@ module.exports = class SkillHumanReply {
                     }
                 },
                 parser: (value, bot, event, context, resolve, reject) => {
-                    if (value == "はい"){
-                        return resolve(true);
-                    } else if (value == "いいえ"){
-                        return resolve(false);
-                    }
-                    return reject();
+                    return parse.by_nlu_with_list(context.sender_language, "yes_no", value, ["はい","いいえ"], resolve, reject);
                 },
                 reaction: (error, value, bot, event, context, resolve, reject) => {
                     if (error) return resolve();
-                    if (!value) return resolve();
+                    if (value === "いいえ") return resolve();
 
                     // Ask if admin wants to create new intent or add this question to existing intent as new expression.
                     bot.collect("is_new_intent");
@@ -63,10 +60,13 @@ module.exports = class SkillHumanReply {
                         ]
                     }
                 },
+                parser: (value, bot, event, context, resolve, reject) => {
+                    return parse.by_nlu_with_list(context.sender_language, "is_new_intent", value, ["新規","既存","わからない"], resolve, reject);
+                },
                 reaction: (error, value, bot, event, context, resolve, reject) => {
                     if (error) return resolve();
 
-                    if (value == "新規"){
+                    if (value === "新規"){
                         // Create new intent using question and add response using answer.
                         return dialogflow.add_intent(
                             context.confirmed.question,
@@ -80,14 +80,12 @@ module.exports = class SkillHumanReply {
                             });
                             return resolve();
                         });
-                    } else if (value == "既存" || value == "わからない"){
-                        // Let admin select the intent to add new expression.
-                        return this._collect_intent_id().then((response) => {
-                            return resolve();
-                        });
                     }
 
-                    return reject();
+                    // Let admin select the intent to add new expression.
+                    return this._collect_intent_id(bot, context).then((response) => {
+                        return resolve();
+                    });
                 }
             },
             intent_id: {
@@ -138,7 +136,7 @@ module.exports = class SkillHumanReply {
             }
         }
 
-        this.clear_context_on_finish = true;
+        this.clear_context_on_finish = (process.env.BOT_EXPRESS_ENV === "test") ? false : true;
     }
 
     _collect_intent_id(bot, context){
@@ -167,6 +165,7 @@ module.exports = class SkillHumanReply {
             }
             message.text += `${offset} 新しいQ&Aとして登録`;
             bot.change_message_to_confirm("intent_id", message);
+            bot.collect("intent_id");
 
             return;
         });
@@ -182,13 +181,15 @@ module.exports = class SkillHumanReply {
 
         // -> Reply to administrator.
         tasks.push(bot.reply({
+            type: "text",
             text: "いただいた内容でユーザーへ返信しておきます。"
         }));
 
         // -> Reply to original user.
-        tasks.push(bot.send(context.confirmed.user_id, {
+        tasks.push(bot.send(context.confirmed.user.id, {
+            type: "text",
             text: context.confirmed.answer
-        }));
+        }, context.confirmed.user.language));
 
         return Promise.all(tasks).then((response) => {
             return resolve();
