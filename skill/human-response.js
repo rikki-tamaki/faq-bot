@@ -27,8 +27,8 @@ module.exports = class SkillHumanResponse {
                             // {type:"message", label:"はい", text:"はい"},
                             // {type:"message", label:"いいえ", text:"いいえ"}
                             {content_type:"text", title:"はい", payload:"はい"},
-                            {content_type:"text", title:"いいえ", payload:"いいえ"},
-                        // ]
+                            {content_type:"text", title:"いいえ", payload:"いいえ"}
+                        ]
                         // quick_replies: [
                         //     {content_type:"text", title:"はい", payload:"はい"},
                         //     {content_type:"text", title:"いいえ", payload:"いいえ"},
