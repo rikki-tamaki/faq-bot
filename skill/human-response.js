@@ -23,14 +23,16 @@ module.exports = class SkillHumanResponse {
                     template: {
                         type: "confirm",
                         text: "このQ&AをChatbotに学習させますか？",
-                        // actions: [
-                        //     {type:"message", label:"はい", text:"はい"},
-                        //     {type:"message", label:"いいえ", text:"いいえ"}
-                        // ]
-                        quick_replies: [
+                        actions: [
+                            // {type:"message", label:"はい", text:"はい"},
+                            // {type:"message", label:"いいえ", text:"いいえ"}
                             {content_type:"text", title:"はい", payload:"はい"},
                             {content_type:"text", title:"いいえ", payload:"いいえ"},
-                        ]
+                        // ]
+                        // quick_replies: [
+                        //     {content_type:"text", title:"はい", payload:"はい"},
+                        //     {content_type:"text", title:"いいえ", payload:"いいえ"},
+                        // ]
                     }
                 },
                 parser: (value, bot, event, context, resolve, reject) => {
