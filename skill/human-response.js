@@ -24,7 +24,7 @@ module.exports = class SkillHumanResponse {
                         type: "confirm",
                         text: "このQ&AをChatbotに学習させますか？",
                         actions: [
-                            {type:"message", label:"はい", text:"はい"},
+                            {type:"message", label:"はい", text:"よろしく！"},
                             {type:"message", label:"いいえ", text:"いいえ"}
                         ]
                     }
