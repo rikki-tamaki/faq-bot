@@ -30,6 +30,7 @@ module.exports = class SkillHumanResponse {
                     }
                 },
                 parser: (value, bot, event, context, resolve, reject) => {
+                    debug("hogehoge");
                     return parser.parse("yes_no", value, resolve, reject);
                 },
                 reaction: (error, value, bot, event, context, resolve, reject) => {
